@@ -4,7 +4,6 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Guest } from '@/lib/api';
-import CountdownRing from './CountdownRing';
 
 interface GuestViewProps {
   guest: Guest;
@@ -22,8 +21,14 @@ function formatDate(iso?: string) {
 
 const cardVariants = {
   hidden: { opacity: 0, y: 48, scale: 0.95 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
-  exit: { opacity: 0, y: -24, scale: 0.97, transition: { duration: 0.4 } },
+  show: {
+    opacity: 1, y: 0, scale: 1,
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+  },
+  exit: {
+    opacity: 0, y: -24, scale: 0.97,
+    transition: { duration: 0.4 },
+  },
 };
 
 const lineVariants = {
@@ -33,6 +38,66 @@ const lineVariants = {
     transition: { delay: i * 0.08 + 0.2, duration: 0.5, ease: [0.22, 1, 0.36, 1] },
   }),
 };
+
+/* ─── Corner accent SVG ─── */
+function CornerAccent({ rotate = 0 }: { rotate?: number }) {
+  return (
+    <svg
+      width="28" height="28" viewBox="0 0 28 28"
+      style={{ transform: `rotate(${rotate}deg)` }}
+    >
+      <path d="M2 26 L2 2 L26 2" stroke="#00d2ff" strokeWidth="2.5"
+        fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="2" cy="2" r="2.5" fill="#f5c842" />
+    </svg>
+  );
+}
+
+/* ─── Animated light sweep on one side ─── */
+function LightBeam({ direction = 'right' }: { direction?: 'left' | 'right' }) {
+  const isRight = direction === 'right';
+  return (
+    <div
+      style={{
+        flex: 1,
+        height: '2px',
+        position: 'relative',
+        overflow: 'hidden',
+        background: 'rgba(255,255,255,0.08)',
+        borderRadius: '2px',
+      }}
+    >
+      {/* Static base line */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'rgba(0,210,255,0.15)',
+      }} />
+      {/* Animated light orb */}
+      <motion.div
+        style={{
+          position: 'absolute',
+          top: '-4px',
+          width: '40px',
+          height: '10px',
+          borderRadius: '50%',
+          background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.95) 0%, rgba(0,210,255,0.6) 50%, transparent 100%)',
+          filter: 'blur(1px)',
+        }}
+        animate={{
+          x: isRight
+            ? ['-40px', '120%']
+            : ['120%', '-40px'],
+        }}
+        transition={{
+          duration: 2.2,
+          repeat: Infinity,
+          repeatDelay: 0.6,
+          ease: 'easeInOut',
+        }}
+      />
+    </div>
+  );
+}
 
 export default function GuestView({ guest, tapCount, countdown, totalCountdown }: GuestViewProps) {
   const fullName = `${guest.first_name} ${guest.last_name}`;
@@ -63,11 +128,12 @@ export default function GuestView({ guest, tapCount, countdown, totalCountdown }
         exit="exit"
         className="relative w-full max-w-5xl"
         style={{
-          background: 'rgba(2, 12, 38, 0.78)',
+          background: 'rgba(2, 12, 38, 0.82)',
           border: '1px solid rgba(0,210,255,0.18)',
           borderRadius: '28px',
           backdropFilter: 'blur(32px)',
-          boxShadow: '0 0 100px rgba(0,80,220,0.22), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.05)',
+          boxShadow:
+            '0 0 100px rgba(0,80,220,0.22), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.05)',
           overflow: 'hidden',
         }}
       >
@@ -76,7 +142,7 @@ export default function GuestView({ guest, tapCount, countdown, totalCountdown }
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              'linear-gradient(135deg, rgba(0,210,255,0.08) 0%, transparent 35%, transparent 65%, rgba(245,200,66,0.06) 100%)',
+              'linear-gradient(135deg, rgba(0,210,255,0.07) 0%, transparent 35%, transparent 65%, rgba(245,200,66,0.05) 100%)',
             borderRadius: '28px',
           }}
         />
@@ -85,59 +151,119 @@ export default function GuestView({ guest, tapCount, countdown, totalCountdown }
         <div
           className="absolute top-0 left-0 right-0 h-[3px]"
           style={{
-            background: 'linear-gradient(90deg, transparent 0%, #00d2ff 30%, #f5c842 60%, #00d2ff 80%, transparent 100%)',
+            background:
+              'linear-gradient(90deg, transparent 0%, #00d2ff 30%, #f5c842 60%, #00d2ff 80%, transparent 100%)',
           }}
         />
 
         <div className="relative flex flex-col md:flex-row items-center gap-10 md:gap-14 p-10 md:p-14">
 
-          {/* ── LEFT: PHOTO ── */}
+          {/* ── LEFT: SQUARE PHOTO ── */}
           <div className="flex-shrink-0 flex flex-col items-center gap-4">
-            <div className="relative">
-              {/* Rotating ring */}
-              <motion.div
-                className="absolute inset-[-5px] rounded-full"
-                style={{
-                  background: 'conic-gradient(from 0deg, #00d2ff, #f5c842, #e63b2e, #00d2ff)',
-                  padding: '3px',
-                  borderRadius: '50%',
-                }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
-              />
-              {/* Photo */}
+
+            {/* Square frame wrapper */}
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+
+              {/* Outer glow border */}
               <div
-                className="relative w-48 h-48 rounded-full overflow-hidden"
-                style={{ border: '4px solid #03122e', boxShadow: '0 0 50px rgba(0,210,255,0.4)' }}
+                style={{
+                  position: 'absolute',
+                  inset: '-3px',
+                  borderRadius: '14px',
+                  padding: '3px',
+                  background: 'linear-gradient(135deg, #00d2ff, #f5c842, #00d2ff)',
+                  boxShadow: '0 0 32px rgba(0,210,255,0.5), 0 0 64px rgba(0,210,255,0.2)',
+                }}
+              />
+
+              {/* Photo container */}
+              <div
+                style={{
+                  position: 'relative',
+                  width: '180px',
+                  height: '215px',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  border: '3px solid #03122e',
+                  boxShadow: 'inset 0 0 20px rgba(0,0,0,0.6)',
+                  zIndex: 1,
+                }}
               >
-                {guest.photo_url ? (
+                {!guest.photo_url ? (
                   <Image
-                    src={guest.photo_url}
+                    // src={guest.photo_url}
+                    src="/pfp/test.jpg"
                     alt={fullName}
                     fill
-                    className="object-cover"
+                    className="object-cover object-top"
                     unoptimized
                   />
                 ) : (
                   <div
-                    className="w-full h-full flex items-center justify-center text-6xl"
-                    style={{ background: 'linear-gradient(135deg, #0a2a6e, #03122e)' }}
+                    style={{
+                      width: '100%', height: '100%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '5rem',
+                      background: 'linear-gradient(160deg, #0a2a6e 0%, #03122e 100%)',
+                    }}
                   >
                     👤
                   </div>
                 )}
+
+                {/* Bottom gradient overlay (like image 3) */}
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0,
+                  height: '60px',
+                  background: 'linear-gradient(to top, rgba(2,12,38,0.85) 0%, transparent 100%)',
+                }} />
               </div>
+
+              {/* Corner accents */}
+              <div style={{ position: 'absolute', top: '-2px', left: '-2px', zIndex: 2 }}>
+                <CornerAccent rotate={0} />
+              </div>
+              <div style={{ position: 'absolute', top: '-2px', right: '-2px', zIndex: 2 }}>
+                <CornerAccent rotate={90} />
+              </div>
+              <div style={{ position: 'absolute', bottom: '-2px', left: '-2px', zIndex: 2 }}>
+                <CornerAccent rotate={270} />
+              </div>
+              <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', zIndex: 2 }}>
+                <CornerAccent rotate={180} />
+              </div>
+
+              {/* Scanning line animation */}
+              <motion.div
+                style={{
+                  position: 'absolute',
+                  left: 0, right: 0,
+                  height: '2px',
+                  background: 'linear-gradient(90deg, transparent, rgba(0,210,255,0.7), transparent)',
+                  boxShadow: '0 0 8px rgba(0,210,255,0.8)',
+                  zIndex: 3,
+                  pointerEvents: 'none',
+                }}
+                animate={{ top: ['0%', '100%', '0%'] }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+              />
             </div>
 
             {/* VIP badge */}
             {guest.is_vip && (
               <motion.div
-                initial={{ scale: 0 }} animate={{ scale: 1 }}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
                 transition={{ delay: 0.4, type: 'spring', stiffness: 260 }}
-                className="flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold tracking-widest"
                 style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '6px 20px',
+                  borderRadius: '999px',
                   background: 'linear-gradient(135deg, #f5c842, #e6a800)',
                   color: '#000',
+                  fontWeight: 700,
+                  fontSize: '0.8rem',
+                  letterSpacing: '0.2em',
                   boxShadow: '0 0 20px rgba(245,200,66,0.5)',
                   fontFamily: 'var(--font-body)',
                 }}
@@ -146,7 +272,28 @@ export default function GuestView({ guest, tapCount, countdown, totalCountdown }
               </motion.div>
             )}
 
-
+            {/* Tap count badge */}
+            <motion.div
+              custom={4} variants={lineVariants} initial="hidden" animate="show"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '6px 16px',
+                borderRadius: '10px',
+                background: 'rgba(0,210,255,0.08)',
+                border: '1px solid rgba(0,210,255,0.25)',
+                fontFamily: 'var(--font-body)',
+              }}
+            >
+              <span style={{ fontSize: '1rem' }}>🏷️</span>
+              <div style={{ lineHeight: 1 }}>
+                <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '2px' }}>
+                  Quẹt hôm nay
+                </div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#00d2ff' }}>
+                  {tapCount} lần
+                </div>
+              </div>
+            </motion.div>
           </div>
 
           {/* ── RIGHT: INFO ── */}
@@ -155,99 +302,169 @@ export default function GuestView({ guest, tapCount, countdown, totalCountdown }
             {/* Welcome tag */}
             <motion.p
               custom={0} variants={lineVariants} initial="hidden" animate="show"
-              className="text-xs tracking-[0.4em] uppercase mb-3"
-              style={{ color: '#00d2ff', fontFamily: 'var(--font-body)', fontWeight: 600 }}
+              style={{
+                color: '#00d2ff',
+                fontFamily: 'var(--font-body)',
+                fontWeight: 600,
+                fontSize: '0.7rem',
+                letterSpacing: '0.4em',
+                textTransform: 'uppercase',
+                marginBottom: '16px',
+              }}
             >
               ✦ Xin Chào, Đại Biểu
             </motion.p>
 
-            {/* Name */}
-            <motion.h2
+            {/* Name + light beams */}
+            <motion.div
               custom={1} variants={lineVariants} initial="hidden" animate="show"
-              className="leading-none mb-3"
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(2.2rem, 5vw, 4.2rem)',
-                background: 'linear-gradient(135deg, #ffffff 0%, #fde68a 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                filter: 'drop-shadow(0 2px 16px rgba(245,200,66,0.3))',
-              }}
+              style={{ marginBottom: '20px' }}
             >
-              {fullName}
-            </motion.h2>
+              {/* Light beams row */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                <LightBeam direction="left" />
+                <div style={{
+                  width: '6px', height: '6px', borderRadius: '50%',
+                  background: '#f5c842',
+                  boxShadow: '0 0 10px #f5c842',
+                  flexShrink: 0,
+                }} />
+                <LightBeam direction="right" />
+              </div>
 
-            {/* Position */}
-            <motion.p
+              {/* Full name */}
+              <h2
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'clamp(2.2rem, 5vw, 4rem)',
+                  lineHeight: 1.05,
+                  background: 'linear-gradient(135deg, #ffffff 0%, #fde68a 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  filter: 'drop-shadow(0 2px 16px rgba(245,200,66,0.3))',
+                  margin: 0,
+                  letterSpacing: '0.02em',
+                }}
+              >
+                {fullName}
+              </h2>
+
+              {/* Light beams row (bottom) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
+                <LightBeam direction="right" />
+                <div style={{
+                  width: '6px', height: '6px', borderRadius: '50%',
+                  background: '#00d2ff',
+                  boxShadow: '0 0 10px #00d2ff',
+                  flexShrink: 0,
+                }} />
+                <LightBeam direction="left" />
+              </div>
+            </motion.div>
+
+            {/* Divider */}
+            <motion.div
               custom={2} variants={lineVariants} initial="hidden" animate="show"
-              className="font-semibold tracking-wider mb-1"
-              style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: 'clamp(1rem, 2vw, 1.5rem)',
-                color: '#00d2ff',
-              }}
-            >
-              {guest.job_position || 'Đại Biểu'}
-            </motion.p>
+              style={{ height: '1px', background: 'rgba(255,255,255,0.07)', marginBottom: '20px' }}
+            />
 
-            {/* Branch */}
-            <motion.p
+            {/* Work Position */}
+            <motion.div
               custom={3} variants={lineVariants} initial="hidden" animate="show"
-              className="mb-8 font-light"
-              style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.95rem',
-                color: 'rgba(255,255,255,0.55)',
-                letterSpacing: '0.03em',
-              }}
+              style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '14px' }}
             >
-              {guest.branch_location || ''}
-            </motion.p>
+              <span style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '0.72rem',
+                color: 'rgba(0,210,255,0.7)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                fontWeight: 600,
+                flexShrink: 0,
+                minWidth: '110px',
+              }}>
+                Chức vụ
+              </span>
+              <div style={{ width: '1px', height: '14px', background: 'rgba(0,210,255,0.3)', flexShrink: 0 }} />
+              <span style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 'clamp(1rem, 2vw, 1.4rem)',
+                fontWeight: 700,
+                color: '#ffffff',
+                letterSpacing: '0.01em',
+              }}>
+                {guest.job_position || 'Đại Biểu'}
+              </span>
+            </motion.div>
 
-            {/* Info chips */}
+            {/* Working Branch */}
             <motion.div
               custom={4} variants={lineVariants} initial="hidden" animate="show"
-              className="flex flex-wrap gap-3 mb-8"
+              style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '28px' }}
             >
-              <InfoChip icon="📅" label="Tham gia" value={formatDate(guest.join_date)} />
-              <InfoChip icon="🏷️" label="Quẹt hôm nay" value={`${tapCount} lần`} accent />
+              <span style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '0.72rem',
+                color: 'rgba(0,210,255,0.7)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                fontWeight: 600,
+                flexShrink: 0,
+                minWidth: '110px',
+              }}>
+                Đơn vị
+              </span>
+              <div style={{ width: '1px', height: '14px', background: 'rgba(0,210,255,0.3)', flexShrink: 0 }} />
+              <span style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 'clamp(0.9rem, 1.6vw, 1.15rem)',
+                fontWeight: 400,
+                color: 'rgba(255,255,255,0.65)',
+                letterSpacing: '0.03em',
+              }}>
+                {guest.branch_location || '—'}
+              </span>
             </motion.div>
 
             {/* Divider */}
             <motion.div
               custom={5} variants={lineVariants} initial="hidden" animate="show"
-              className="h-px mb-5"
-              style={{ background: 'rgba(255,255,255,0.07)' }}
+              style={{ height: '1px', background: 'rgba(255,255,255,0.07)', marginBottom: '18px' }}
             />
 
-            {/* RFID row */}
+            {/* Bottom row: join date + RFID */}
             <motion.div
               custom={6} variants={lineVariants} initial="hidden" animate="show"
-              className="flex items-center gap-3"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}
             >
-              <motion.div
-                className="w-2 h-2 rounded-full"
-                style={{ background: '#00d2ff', boxShadow: '0 0 8px #00d2ff' }}
-                animate={{ opacity: [1, 0.3, 1] }}
-                transition={{ duration: 1.2, repeat: Infinity }}
-              />
-              <span
-                className="text-xs uppercase tracking-widest"
-                style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-body)' }}
-              >
-                Mã thẻ:
-              </span>
-              <span
-                className="tracking-widest"
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '0.9rem',
-                  color: 'rgba(255,255,255,0.45)',
-                }}
-              >
-                {guest.rfid_card_id}
-              </span>
+              {/* Join date */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.9rem' }}>📅</span>
+                <div>
+                  <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-body)' }}>
+                    Tham gia
+                  </div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'rgba(255,255,255,0.75)', fontFamily: 'var(--font-body)' }}>
+                    {formatDate(guest.join_date)}
+                  </div>
+                </div>
+              </div>
+
+              {/* RFID */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <motion.div
+                  style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#00d2ff', boxShadow: '0 0 8px #00d2ff', flexShrink: 0 }}
+                  animate={{ opacity: [1, 0.3, 1] }}
+                  transition={{ duration: 1.2, repeat: Infinity }}
+                />
+                <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-body)' }}>
+                  Mã thẻ:
+                </span>
+                <span style={{ fontSize: '0.88rem', letterSpacing: '0.12em', color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-body)' }}>
+                  {guest.rfid_card_id}
+                </span>
+              </div>
             </motion.div>
           </div>
         </div>
@@ -255,43 +472,18 @@ export default function GuestView({ guest, tapCount, countdown, totalCountdown }
 
       {/* Slogan */}
       <p
-        className="fixed bottom-7 left-0 right-0 text-center tracking-[0.28em] uppercase"
+        className="fixed bottom-7 left-0 right-0 text-center"
         style={{
           fontFamily: 'var(--font-body)',
           fontSize: 'clamp(0.65rem, 1.1vw, 0.9rem)',
           fontWeight: 700,
           color: 'rgba(245,200,66,0.6)',
+          letterSpacing: '0.28em',
+          textTransform: 'uppercase',
         }}
       >
         Tiên Phong – Đoàn Kết – Sáng Tạo – Đột Phá – Phát Triển
       </p>
     </motion.div>
-  );
-}
-
-function InfoChip({ icon, label, value, accent }: {
-  icon: string; label: string; value: string; accent?: boolean;
-}) {
-  return (
-    <div
-      className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
-      style={{
-        background: accent ? 'rgba(0,210,255,0.08)' : 'rgba(255,255,255,0.04)',
-        border: `1px solid ${accent ? 'rgba(0,210,255,0.25)' : 'rgba(255,255,255,0.08)'}`,
-        fontFamily: 'var(--font-body)',
-      }}
-    >
-      <span className="text-lg">{icon}</span>
-      <div className="flex flex-col leading-none">
-        <span className="text-[0.65rem] uppercase tracking-widest mb-0.5"
-          style={{ color: 'rgba(255,255,255,0.35)' }}>
-          {label}
-        </span>
-        <span className="text-sm font-semibold"
-          style={{ color: accent ? '#00d2ff' : 'rgba(255,255,255,0.85)' }}>
-          {value}
-        </span>
-      </div>
-    </div>
   );
 }

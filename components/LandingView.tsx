@@ -1,33 +1,36 @@
 'use client';
-// ── components/LandingView.tsx ────────────────────────────────
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 const stagger = {
   hidden: {},
   show: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
 };
+
 const up = {
   hidden: { opacity: 0, y: 30 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+  },
 };
 
 export default function LandingView() {
   return (
     <motion.div
-      key="landing"
-      className="fixed inset-0 z-10 flex flex-col items-center justify-center text-center px-6"
+      className="fixed inset-0 z-10 flex flex-col items-center justify-center px-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 0.97 }}
-      transition={{ duration: 0.6 }}
+      exit={{ opacity: 0 }}
     >
-      {/* Background glow blob */}
+      {/* Background */}
       <div
-        className="pointer-events-none absolute inset-0"
+        className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 70% 55% at 50% 50%, rgba(0,80,200,0.22) 0%, transparent 70%)',
+            'radial-gradient(ellipse 70% 55% at 50% 50%, rgba(0,80,200,0.2), transparent)',
         }}
       />
 
@@ -35,150 +38,124 @@ export default function LandingView() {
         variants={stagger}
         initial="hidden"
         animate="show"
-        className="flex flex-col items-center gap-0 relative z-10"
+        className="relative z-10 w-full max-w-7xl flex flex-col items-center"
       >
-        {/* Emblem */}
-        <motion.div variants={up} className="mb-8">
-          <div className="relative w-32 h-32 mx-auto">
-            {/* Rotating conic ring */}
-            <motion.div
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: 'conic-gradient(from 0deg, #c8102e, #0047ab, #ffd700, #00c8ff, #c8102e)',
-                padding: '3px',
-              }}
-              animate={{ rotate: 360 }}
-              transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+        {/* ================= MAIN GRID ================= */}
+        <div className="w-full grid md:grid-cols-[1.2fr_1fr] gap-10 items-center">
+
+          {/* LEFT: LOGO */}
+          <motion.div
+            variants={up}
+            className="flex justify-center md:justify-end"
+          >
+            <div className="relative w-[300px] h-[300px] md:w-[480px] md:h-[480px] lg:w-[600px] lg:h-[600px]">
+              <Image
+                src="/media/logo.png"
+                alt="logo"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+          </motion.div>
+
+          {/* RIGHT: TEXT */}
+          <motion.div
+            variants={up}
+            className="text-center md:text-left"
+          >
+            <p
+              className="mb-3 tracking-[0.3em] uppercase"
+              style={{ color: '#00d2ff', fontWeight: 600 }}
             >
-              <div
-                className="w-full h-full rounded-full flex items-center justify-center text-5xl"
-                style={{ background: '#03122e' }}
-              >
-                🌟
-              </div>
-            </motion.div>
-            {/* Outer glow ring */}
-            <motion.div
-              className="absolute inset-[-8px] rounded-full border border-cyan-400/20"
-              animate={{ scale: [1, 1.08, 1], opacity: [0.4, 0.8, 0.4] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              Chào Mừng ĐẠI HỘI ĐẠI BIỂU
+            </p>
+
+            <h1
+              className="leading-tight mb-3"
+              style={{
+                fontSize: 'clamp(2.5rem, 5vw, 5rem)',
+                fontWeight: 800,
+                background: 'linear-gradient(135deg, #f5c842, #fff, #f5c842)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              HỘI LHTN VIỆT NAM PHƯỜNG AN PHÚ
+            </h1>
+
+            <p className="text-xl font-semibold mb-1">
+              LẦN THỨ I
+            </p>
+
+            <p
+              className="mb-6"
+              style={{ color: '#00d2ff', fontWeight: 600 }}
+            >
+              NHIỆM KỲ 2026 – 2031
+            </p>
+
+            <div
+              className="w-64 h-px mx-auto md:mx-0"
+              style={{
+                background:
+                  'linear-gradient(90deg, transparent, #00d2ff, #f5c842, transparent)',
+              }}
             />
+          </motion.div>
+        </div>
+
+        {/* ================= CTA (SEPARATE BLOCK) ================= */}
+        <motion.div
+          variants={up}
+          className="mt-16 w-full max-w-5xl relative group"
+        >
+          {/* Outer Thin Border Glow */}
+          <div className="absolute -inset-1 bg-cyan-500/10 blur-sm rounded-sm" />
+
+          <div
+            className="relative flex items-center justify-center h-20 border border-cyan-500/30 bg-slate-950/40 backdrop-blur-md"
+            style={{ boxShadow: 'inset 0 0 20px rgba(0, 210, 255, 0.1)' }}
+          >
+            {/* Inner "Pill" Container */}
+            <div className="flex items-center gap-4 px-12 py-2 border border-cyan-400/40 rounded-full bg-cyan-950/20">
+              {/* Card Icon - Using an Image or SVG for better match */}
+              <div className="w-8 h-5 bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-sm relative shadow-lg">
+                <div className="absolute top-1 w-full h-[3px] bg-slate-800" />
+              </div>
+
+              <span className="font-bold tracking-widest text-xl text-white uppercase italic">
+                Vui Lòng Quẹt Thẻ Để Điểm Danh
+              </span>
+            </div>
+
+            {/* Corner Accents (Optional for that tech look) */}
+            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-400" />
+            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-400" />
           </div>
-        </motion.div>
 
-        {/* Label */}
-        <motion.p
-          variants={up}
-          className="text-sm tracking-[0.4em] uppercase mb-3"
-          style={{ color: '#00d2ff', fontFamily: 'var(--font-body)', fontWeight: 600 }}
-        >
-          Chào Mừng Đại Hội Đại Biểu Toàn Quốc
-        </motion.p>
-
-        {/* Main title */}
-        <motion.h1
-          variants={up}
-          className="leading-none mb-2"
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(3rem, 7vw, 6.5rem)',
-            background: 'linear-gradient(135deg, #f5c842 0%, #fde68a 45%, #ffffff 60%, #fde68a 80%, #f5c842 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            filter: 'drop-shadow(0 2px 32px rgba(245,200,66,0.45))',
-            letterSpacing: '0.05em',
-          }}
-        >
-          ĐOÀN TNCS<br />HỒ CHÍ MINH
-        </motion.h1>
-
-        {/* Subtitle row */}
-        <motion.p
-          variants={up}
-          className="font-semibold tracking-widest mb-1"
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: 'clamp(1.1rem, 2.5vw, 2rem)',
-            color: '#fff',
-          }}
-        >
-          LẦN THỨ XII
-        </motion.p>
-
-        <motion.p
-          variants={up}
-          className="tracking-[0.12em] mb-10"
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: 'clamp(0.9rem, 1.8vw, 1.4rem)',
-            color: '#00d2ff',
-            fontWeight: 600,
-          }}
-        >
-          NHIỆM KỲ 2022 – 2027
-        </motion.p>
-
-        {/* Divider */}
-        <motion.div
-          variants={up}
-          className="w-72 h-px mb-10"
-          style={{
-            background: 'linear-gradient(90deg, transparent, #00d2ff, #f5c842, #00d2ff, transparent)',
-          }}
-        />
-
-        {/* Scan prompt */}
-        <motion.div
-          variants={up}
-          className="flex items-center gap-4 px-8 py-4 rounded-full"
-          style={{
-            background: 'rgba(0,210,255,0.06)',
-            border: '1px solid rgba(0,210,255,0.25)',
-          }}
-          animate={{
-            boxShadow: [
-              '0 0 0 0 rgba(0,210,255,0.3)',
-              '0 0 0 14px rgba(0,210,255,0)',
-            ],
-          }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeOut', delay: 1.5 }}
-        >
-          <motion.span
-            className="text-3xl"
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 1.6, repeat: Infinity }}
-          >
-            💳
-          </motion.span>
-          <span
-            className="tracking-[0.14em] uppercase"
-            style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: 'clamp(0.8rem, 1.4vw, 1.05rem)',
-              fontWeight: 700,
-              color: 'rgba(255,255,255,0.88)',
-            }}
-          >
-            Vui Lòng Quẹt Thẻ Để Điểm Danh
-          </span>
+          {/* Animated Scanning Line Effect */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent w-1/2"
+            animate={{ x: ['-100%', '200%'] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          />
         </motion.div>
       </motion.div>
 
-      {/* Slogan footer */}
+      {/* FOOTER */}
       <motion.p
-        className="fixed bottom-7 left-0 right-0 text-center tracking-[0.28em] uppercase"
+        className="absolute bottom-6 left-0 right-0 text-center tracking-[0.25em] uppercase"
         style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: 'clamp(0.65rem, 1.1vw, 0.9rem)',
+          fontSize: '0.85rem',
           fontWeight: 700,
           color: 'rgba(245,200,66,0.7)',
         }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.4 }}
+        transition={{ delay: 1.2 }}
       >
-        Tiên Phong – Đoàn Kết – Sáng Tạo – Đột Phá – Phát Triển
+        TIÊN PHONG - YÊU NƯỚC - BẢN LĨNH - SÁNG TẠO
       </motion.p>
     </motion.div>
   );
