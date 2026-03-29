@@ -180,8 +180,8 @@ export default function GuestView({ guest, tapCount, countdown, totalCountdown }
               <div
                 style={{
                   position: 'relative',
-                  width: '180px',
-                  height: '215px',
+                  width: '400px',       // display size (adjust for UI)
+                  height: '400px',      // square container
                   borderRadius: '12px',
                   overflow: 'hidden',
                   border: '3px solid #03122e',
@@ -195,8 +195,11 @@ export default function GuestView({ guest, tapCount, countdown, totalCountdown }
                     src="/pfp/test.jpg"
                     alt={fullName}
                     fill
-                    className="object-cover object-top"
+                    className="object-cover object-center"
                     unoptimized
+                    priority
+                    sizes="400px"
+                    quality={100}
                   />
                 ) : (
                   <div
