@@ -4,6 +4,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Guest } from '@/lib/api';
+import { useEffect, useRef } from 'react';
 
 interface GuestViewProps {
   guest: Guest;
@@ -20,86 +21,123 @@ function formatDate(iso?: string) {
 }
 
 const cardVariants = {
-  hidden: { opacity: 0, y: 48, scale: 0.95 },
+  hidden: { opacity: 0, y: 40, scale: 0.96 },
   show: {
     opacity: 1, y: 0, scale: 1,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
   },
   exit: {
-    opacity: 0, y: -24, scale: 0.97,
-    transition: { duration: 0.4 },
+    opacity: 0, y: -20, scale: 0.97,
+    transition: { duration: 0.35 },
   },
 };
 
 const lineVariants = {
-  hidden: { opacity: 0, x: -20 },
+  hidden: { opacity: 0, x: -16 },
   show: (i: number) => ({
     opacity: 1, x: 0,
-    transition: { delay: i * 0.08 + 0.2, duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+    transition: { delay: i * 0.07 + 0.15, duration: 0.45, ease: [0.22, 1, 0.36, 1] },
   }),
 };
 
-/* ─── Corner accent SVG ─── */
-function CornerAccent({ rotate = 0 }: { rotate?: number }) {
-  return (
-    <svg
-      width="28" height="28" viewBox="0 0 28 28"
-      style={{ transform: `rotate(${rotate}deg)` }}
-    >
-      <path d="M2 26 L2 2 L26 2" stroke="#00d2ff" strokeWidth="2.5"
-        fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="2" cy="2" r="2.5" fill="#f5c842" />
-    </svg>
-  );
-}
-
-/* ─── Animated light sweep on one side ─── */
+/* ─── Animated light sweep line beside the name ─── */
 function LightBeam({ direction = 'right' }: { direction?: 'left' | 'right' }) {
   const isRight = direction === 'right';
   return (
-    <div
-      style={{
-        flex: 1,
-        height: '2px',
-        position: 'relative',
-        overflow: 'hidden',
-        background: 'rgba(255,255,255,0.08)',
-        borderRadius: '2px',
-      }}
-    >
-      {/* Static base line */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: 'rgba(0,210,255,0.15)',
-      }} />
-      {/* Animated light orb */}
+    <div style={{
+      flex: 1, height: '1px',
+      position: 'relative', overflow: 'hidden',
+      background: 'rgba(255,255,255,0.06)',
+    }}>
       <motion.div
         style={{
-          position: 'absolute',
-          top: '-4px',
-          width: '40px',
-          height: '10px',
+          position: 'absolute', top: '-4px',
+          width: '60px', height: '9px',
           borderRadius: '50%',
-          background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.95) 0%, rgba(0,210,255,0.6) 50%, transparent 100%)',
+          background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.95) 0%, rgba(200,230,255,0.5) 50%, transparent 100%)',
           filter: 'blur(1px)',
         }}
-        animate={{
-          x: isRight
-            ? ['-40px', '120%']
-            : ['120%', '-40px'],
-        }}
-        transition={{
-          duration: 2.2,
-          repeat: Infinity,
-          repeatDelay: 0.6,
-          ease: 'easeInOut',
-        }}
+        animate={{ x: isRight ? ['-60px', '115%'] : ['115%', '-60px'] }}
+        transition={{ duration: 2.6, repeat: Infinity, repeatDelay: 0.8, ease: 'easeInOut' }}
       />
     </div>
   );
 }
 
-export default function GuestView({ guest, tapCount, countdown, totalCountdown }: GuestViewProps) {
+/* ─── FitText: scales h2 so it always fits in one line ─── */
+function FitName({ name }: { name: string }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const text = textRef.current;
+    if (!wrap || !text) return;
+    // Reset scale first
+    text.style.transform = 'scaleX(1)';
+    const ratio = wrap.clientWidth / text.scrollWidth;
+    if (ratio < 1) text.style.transform = `scaleX(${ratio})`;
+  }, [name]);
+
+  return (
+    <div ref={wrapRef} style={{ overflow: 'hidden', width: '100%' }}>
+      <h2
+        ref={textRef}
+        style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: 'clamp(1.4rem, 3.8vw, 2.8rem)',
+          lineHeight: 1, margin: 0,
+          background: 'linear-gradient(130deg, #ffffff 30%, #fde68a 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          letterSpacing: '0.04em',
+          textTransform: 'uppercase',
+          whiteSpace: 'nowrap',
+          transformOrigin: 'left center',
+          display: 'inline-block',
+        }}
+      >
+        {name}
+      </h2>
+    </div>
+  );
+}
+
+/* ─── Info row: label dim, value white, same size ─── */
+function InfoRow({ label, value, custom }: { label: string; value: string; custom: number }) {
+  return (
+    <motion.div
+      custom={custom} variants={lineVariants} initial="hidden" animate="show"
+      style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '13px' }}
+    >
+      <span style={{
+        fontFamily: 'var(--font-body)',
+        fontSize: 'clamp(0.88rem, 1.4vw, 1.05rem)',
+        fontWeight: 500,
+        color: 'rgba(255,255,255,0.42)',
+        flexShrink: 0,
+        minWidth: '148px',
+      }}>
+        {label}
+      </span>
+      <div style={{ width: '1px', height: '13px', background: 'rgba(255,255,255,0.15)', flexShrink: 0, alignSelf: 'center' }} />
+      <span style={{
+        fontFamily: 'var(--font-body)',
+        fontSize: 'clamp(0.88rem, 1.4vw, 1.05rem)',
+        fontWeight: 600,
+        color: '#ffffff',
+      }}>
+        {value}
+      </span>
+    </motion.div>
+  );
+}
+
+const PHOTO_W = 380;
+const PHOTO_H = 380; // 1:1 to match 1800×1800 source image
+
+export default function GuestView({ guest, tapCount }: GuestViewProps) {
   const fullName = `${guest.first_name} ${guest.last_name}`;
 
   return (
@@ -111,380 +149,268 @@ export default function GuestView({ guest, tapCount, countdown, totalCountdown }
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
     >
-      {/* Ambient glow */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,60,180,0.3) 0%, transparent 70%)',
-        }}
-      />
+      {/* Ambient background glow */}
+      <div className="pointer-events-none absolute inset-0" style={{
+        background: 'radial-gradient(ellipse 65% 55% at 50% 50%, rgba(0,50,160,0.28) 0%, transparent 70%)',
+      }} />
 
       <motion.div
         key={guest.rfid_card_id}
         variants={cardVariants}
-        initial="hidden"
-        animate="show"
-        exit="exit"
+        initial="hidden" animate="show" exit="exit"
         className="relative w-full max-w-5xl"
         style={{
-          background: 'rgba(2, 12, 38, 0.82)',
-          border: '1px solid rgba(0,210,255,0.18)',
-          borderRadius: '28px',
-          backdropFilter: 'blur(32px)',
+          background: 'rgba(3, 10, 32, 0.88)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: '24px',
+          backdropFilter: 'blur(40px)',
           boxShadow:
-            '0 0 100px rgba(0,80,220,0.22), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.05)',
+            '0 0 80px rgba(0,60,200,0.2), 0 2px 0 rgba(255,255,255,0.06) inset, 0 -1px 0 rgba(0,0,0,0.4) inset',
           overflow: 'hidden',
         }}
       >
-        {/* Holographic shimmer overlay */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(135deg, rgba(0,210,255,0.07) 0%, transparent 35%, transparent 65%, rgba(245,200,66,0.05) 100%)',
-            borderRadius: '28px',
-          }}
-        />
+        {/* Subtle shimmer overlay */}
+        <div className="pointer-events-none absolute inset-0" style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%, rgba(245,200,66,0.03) 100%)',
+        }} />
 
-        {/* Top accent bar */}
-        <div
-          className="absolute top-0 left-0 right-0 h-[3px]"
-          style={{
-            background:
-              'linear-gradient(90deg, transparent 0%, #00d2ff 30%, #f5c842 60%, #00d2ff 80%, transparent 100%)',
-          }}
-        />
+        {/* Top accent line */}
+        <div className="absolute top-0 left-0 right-0" style={{ height: '2px' }}>
+          <div style={{
+            height: '100%',
+            background: 'linear-gradient(90deg, transparent 0%, rgba(0,180,255,0.6) 30%, rgba(255,255,255,0.9) 50%, rgba(245,200,66,0.6) 70%, transparent 100%)',
+          }} />
+        </div>
 
         <div className="relative flex flex-col md:flex-row items-center gap-10 md:gap-14 p-10 md:p-14">
 
-          {/* ── LEFT: SQUARE PHOTO ── */}
-          <div className="flex-shrink-0 flex flex-col items-center gap-4">
+          {/* ══ LEFT — PHOTO CARD ══ */}
+          <div className="flex-shrink-0 flex flex-col items-center" style={{ gap: '14px' }}>
 
-            {/* Square frame wrapper */}
+            {/*
+              ─ The "side white light" effect from the reference:
+                A dark card with two vertical soft white glows bleeding
+                from the left and right inner edges of the photo.
+            ─ */}
             <div style={{ position: 'relative', display: 'inline-block' }}>
 
-              {/* Outer glow border */}
-              <div
+              {/* Outer card shell — subtle border + deep drop shadow */}
+              <motion.div
+                animate={{
+                  boxShadow: [
+                    '0 0 24px rgba(0,160,255,0.25), 0 0 60px rgba(0,80,180,0.12)',
+                    '0 0 36px rgba(0,180,255,0.35), 0 0 80px rgba(0,100,200,0.18)',
+                    '0 0 24px rgba(0,160,255,0.25), 0 0 60px rgba(0,80,180,0.12)',
+                  ]
+                }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                 style={{
-                  position: 'absolute',
-                  inset: '-3px',
-                  borderRadius: '14px',
-                  padding: '3px',
-                  background: 'linear-gradient(135deg, #00d2ff, #f5c842, #00d2ff)',
-                  boxShadow: '0 0 32px rgba(0,210,255,0.5), 0 0 64px rgba(0,210,255,0.2)',
+                  position: 'absolute', inset: '-2px',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255,255,255,0.14)',
+                  background: 'transparent',
+                  zIndex: 0,
                 }}
               />
 
               {/* Photo container */}
-              <div
-                style={{
-                  position: 'relative',
-                  width: '400px',       // display size (adjust for UI)
-                  height: '400px',      // square container
-                  borderRadius: '12px',
-                  overflow: 'hidden',
-                  border: '3px solid #03122e',
-                  boxShadow: 'inset 0 0 20px rgba(0,0,0,0.6)',
-                  zIndex: 1,
-                }}
-              >
+              <div style={{
+                position: 'relative',
+                width: `${PHOTO_W}px`,
+                height: `${PHOTO_H}px`,
+                borderRadius: '14px',
+                overflow: 'hidden',
+                backgroundColor: '#060e28',
+                zIndex: 1,
+              }}>
                 {!guest.photo_url ? (
                   <Image
-                    // src={guest.photo_url}
                     src="/pfp/test.jpg"
                     alt={fullName}
                     fill
                     className="object-cover object-center"
-                    unoptimized
-                    priority
-                    sizes="400px"
-                    quality={100}
+                    unoptimized priority
+                    sizes={`${PHOTO_W}px`}
                   />
                 ) : (
-                  <div
-                    style={{
-                      width: '100%', height: '100%',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '5rem',
-                      background: 'linear-gradient(160deg, #0a2a6e 0%, #03122e 100%)',
-                    }}
-                  >
+                  <div style={{
+                    width: '100%', height: '100%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '5rem',
+                    background: 'linear-gradient(170deg, #0d2560 0%, #060e28 100%)',
+                  }}>
                     👤
                   </div>
                 )}
 
-                {/* Bottom gradient overlay (like image 3) */}
+                {/* ── LEFT white light column ── */}
+                <motion.div
+                  animate={{ opacity: [0.55, 0.85, 0.55] }}
+                  transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+                  style={{
+                    position: 'absolute', top: 0, left: 0, bottom: 0,
+                    width: '52px',
+                    background:
+                      'linear-gradient(to right, rgba(255,255,255,0.22) 0%, rgba(200,230,255,0.10) 50%, transparent 100%)',
+                    pointerEvents: 'none',
+                  }}
+                />
+
+                {/* ── RIGHT white light column ── */}
+                <motion.div
+                  animate={{ opacity: [0.55, 0.85, 0.55] }}
+                  transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+                  style={{
+                    position: 'absolute', top: 0, right: 0, bottom: 0,
+                    width: '52px',
+                    background:
+                      'linear-gradient(to left, rgba(255,255,255,0.22) 0%, rgba(200,230,255,0.10) 50%, transparent 100%)',
+                    pointerEvents: 'none',
+                  }}
+                />
+
+                {/* Bottom name fade overlay */}
                 <div style={{
-                  position: 'absolute', bottom: 0, left: 0, right: 0,
-                  height: '60px',
-                  background: 'linear-gradient(to top, rgba(2,12,38,0.85) 0%, transparent 100%)',
+                  position: 'absolute', bottom: 0, left: 0, right: 0, height: '90px',
+                  background: 'linear-gradient(to top, rgba(3,10,32,0.96) 0%, rgba(3,10,32,0.4) 60%, transparent 100%)',
                 }} />
               </div>
 
-              {/* Corner accents */}
-              <div style={{ position: 'absolute', top: '-2px', left: '-2px', zIndex: 2 }}>
-                <CornerAccent rotate={0} />
-              </div>
-              <div style={{ position: 'absolute', top: '-2px', right: '-2px', zIndex: 2 }}>
-                <CornerAccent rotate={90} />
-              </div>
-              <div style={{ position: 'absolute', bottom: '-2px', left: '-2px', zIndex: 2 }}>
-                <CornerAccent rotate={270} />
-              </div>
-              <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', zIndex: 2 }}>
-                <CornerAccent rotate={180} />
-              </div>
-
-              {/* Scanning line animation */}
-              <motion.div
-                style={{
-                  position: 'absolute',
-                  left: 0, right: 0,
-                  height: '2px',
-                  background: 'linear-gradient(90deg, transparent, rgba(0,210,255,0.7), transparent)',
-                  boxShadow: '0 0 8px rgba(0,210,255,0.8)',
-                  zIndex: 3,
-                  pointerEvents: 'none',
-                }}
-                animate={{ top: ['0%', '100%', '0%'] }}
-                transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-              />
+              {/* Thin bottom border accent */}
+              <div style={{
+                position: 'absolute', bottom: '-1px', left: '10%', right: '10%', height: '2px',
+                background: 'linear-gradient(90deg, transparent, rgba(0,180,255,0.7), transparent)',
+                zIndex: 2,
+              }} />
             </div>
 
             {/* VIP badge */}
             {guest.is_vip && (
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.4, type: 'spring', stiffness: 260 }}
+                initial={{ scale: 0 }} animate={{ scale: 1 }}
+                transition={{ delay: 0.4, type: 'spring', stiffness: 240 }}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '6px 20px',
-                  borderRadius: '999px',
-                  background: 'linear-gradient(135deg, #f5c842, #e6a800)',
-                  color: '#000',
-                  fontWeight: 700,
-                  fontSize: '0.8rem',
-                  letterSpacing: '0.2em',
-                  boxShadow: '0 0 20px rgba(245,200,66,0.5)',
+                  display: 'flex', alignItems: 'center', gap: '7px',
+                  padding: '5px 18px', borderRadius: '999px',
+                  background: 'linear-gradient(135deg, #f5c842, #d4960a)',
+                  color: '#000', fontWeight: 800, fontSize: '0.75rem',
+                  letterSpacing: '0.22em',
+                  boxShadow: '0 0 18px rgba(245,200,66,0.45)',
                   fontFamily: 'var(--font-body)',
                 }}
               >
-                ⭐ VIP
+                KHÁCH MỜI
               </motion.div>
             )}
-
-            {/* Tap count badge */}
-            <motion.div
-              custom={4} variants={lineVariants} initial="hidden" animate="show"
-              style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                padding: '6px 16px',
-                borderRadius: '10px',
-                background: 'rgba(0,210,255,0.08)',
-                border: '1px solid rgba(0,210,255,0.25)',
-                fontFamily: 'var(--font-body)',
-              }}
-            >
-              <span style={{ fontSize: '1rem' }}>🏷️</span>
-              <div style={{ lineHeight: 1 }}>
-                <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '2px' }}>
-                  Quẹt hôm nay
-                </div>
-                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#00d2ff' }}>
-                  {tapCount} lần
-                </div>
-              </div>
-            </motion.div>
           </div>
 
-          {/* ── RIGHT: INFO ── */}
-          <div className="flex-1 min-w-0 flex flex-col gap-0">
+          {/* ══ RIGHT — INFO ══ */}
+          <div className="flex-1 min-w-0 flex flex-col">
 
-            {/* Welcome tag */}
+            {/* Welcome label */}
             <motion.p
               custom={0} variants={lineVariants} initial="hidden" animate="show"
               style={{
-                color: '#00d2ff',
+                color: 'rgba(0,200,255,0.8)',
                 fontFamily: 'var(--font-body)',
-                fontWeight: 600,
-                fontSize: '0.7rem',
-                letterSpacing: '0.4em',
-                textTransform: 'uppercase',
-                marginBottom: '16px',
+                fontWeight: 600, fontSize: '1rem',
+                letterSpacing: '0.4em', textTransform: 'uppercase',
+                marginBottom: '20px',
               }}
             >
               ✦ Xin Chào, Đại Biểu
             </motion.p>
 
-            {/* Name + light beams */}
+            {/* Name — rectangle frame, full width, single line auto-shrink */}
             <motion.div
               custom={1} variants={lineVariants} initial="hidden" animate="show"
-              style={{ marginBottom: '20px' }}
+              style={{ position: 'relative', marginBottom: '26px', padding: '14px 20px', display: 'block' }}
             >
-              {/* Light beams row */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                <LightBeam direction="left" />
-                <div style={{
-                  width: '6px', height: '6px', borderRadius: '50%',
-                  background: '#f5c842',
-                  boxShadow: '0 0 10px #f5c842',
-                  flexShrink: 0,
-                }} />
-                <LightBeam direction="right" />
-              </div>
+              {/* Outer rectangle border */}
+              <div style={{
+                position: 'absolute', inset: 0,
+                border: '1px solid rgba(0,200,255,0.35)',
+                borderRadius: '6px',
+                boxShadow: '0 0 18px rgba(0,180,255,0.12), inset 0 0 18px rgba(0,100,200,0.06)',
+                pointerEvents: 'none',
+              }} />
 
-              {/* Full name */}
-              <h2
+              {/* Corner brackets — TL */}
+              <svg width="14" height="14" viewBox="0 0 14 14" style={{ position: 'absolute', top: '-1px', left: '-1px' }}>
+                <path d="M1 13 L1 1 L13 1" stroke="#00d2ff" strokeWidth="2" fill="none" strokeLinecap="square" />
+              </svg>
+              {/* TR */}
+              <svg width="14" height="14" viewBox="0 0 14 14" style={{ position: 'absolute', top: '-1px', right: '-1px' }}>
+                <path d="M13 13 L13 1 L1 1" stroke="#00d2ff" strokeWidth="2" fill="none" strokeLinecap="square" />
+              </svg>
+              {/* BL */}
+              <svg width="14" height="14" viewBox="0 0 14 14" style={{ position: 'absolute', bottom: '-1px', left: '-1px' }}>
+                <path d="M1 1 L1 13 L13 13" stroke="#00d2ff" strokeWidth="2" fill="none" strokeLinecap="square" />
+              </svg>
+              {/* BR */}
+              <svg width="14" height="14" viewBox="0 0 14 14" style={{ position: 'absolute', bottom: '-1px', right: '-1px' }}>
+                <path d="M13 1 L13 13 L1 13" stroke="#00d2ff" strokeWidth="2" fill="none" strokeLinecap="square" />
+              </svg>
+
+              <FitName name={fullName} />
+            </motion.div>
+
+            {/* Divider */}
+            <motion.div custom={2} variants={lineVariants} initial="hidden" animate="show"
+              style={{ height: '1px', background: 'rgba(255,255,255,0.06)', marginBottom: '20px' }} />
+
+            {/* Info rows */}
+            <InfoRow label="Chức vụ" value={guest.job_position || 'Đại Biểu'} custom={3} />
+            <InfoRow label="Đơn vị" value={guest.branch_location || '—'} custom={4} />
+
+
+            {/* Divider */}
+            <motion.div custom={6} variants={lineVariants} initial="hidden" animate="show"
+              style={{ height: '1px', background: 'rgba(255,255,255,0.06)', marginTop: '6px', marginBottom: '16px' }} />
+
+            {/* Tap count */}
+            <motion.div custom={7} variants={lineVariants} initial="hidden" animate="show"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                marginTop: '15px' // Adds spacing above the entire row
+              }}>
+              <motion.div
                 style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: 'clamp(2.2rem, 5vw, 4rem)',
-                  lineHeight: 1.05,
-                  background: 'linear-gradient(135deg, #ffffff 0%, #fde68a 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  filter: 'drop-shadow(0 2px 16px rgba(245,200,66,0.3))',
-                  margin: 0,
-                  letterSpacing: '0.02em',
+                  width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0,
+                  background: 'rgba(0,200,255,0.9)', boxShadow: '0 0 7px rgba(0,200,255,0.8)',
                 }}
-              >
-                {fullName}
-              </h2>
-
-              {/* Light beams row (bottom) */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
-                <LightBeam direction="right" />
-                <div style={{
-                  width: '6px', height: '6px', borderRadius: '50%',
-                  background: '#00d2ff',
-                  boxShadow: '0 0 10px #00d2ff',
-                  flexShrink: 0,
-                }} />
-                <LightBeam direction="left" />
-              </div>
-            </motion.div>
-
-            {/* Divider */}
-            <motion.div
-              custom={2} variants={lineVariants} initial="hidden" animate="show"
-              style={{ height: '1px', background: 'rgba(255,255,255,0.07)', marginBottom: '20px' }}
-            />
-
-            {/* Work Position */}
-            <motion.div
-              custom={3} variants={lineVariants} initial="hidden" animate="show"
-              style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '14px' }}
-            >
+                animate={{ opacity: [1, 0.25, 1] }}
+                transition={{ duration: 1.4, repeat: Infinity }}
+              />
               <span style={{
                 fontFamily: 'var(--font-body)',
-                fontSize: '0.72rem',
-                color: 'rgba(0,210,255,0.7)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.15em',
-                fontWeight: 600,
-                flexShrink: 0,
-                minWidth: '110px',
-              }}>
-                Chức vụ
-              </span>
-              <div style={{ width: '1px', height: '14px', background: 'rgba(0,210,255,0.3)', flexShrink: 0 }} />
-              <span style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: 'clamp(1rem, 2vw, 1.4rem)',
-                fontWeight: 700,
+                fontSize: '0.85rem',
                 color: '#ffffff',
-                letterSpacing: '0.01em',
-              }}>
-                {guest.job_position || 'Đại Biểu'}
-              </span>
-            </motion.div>
-
-            {/* Working Branch */}
-            <motion.div
-              custom={4} variants={lineVariants} initial="hidden" animate="show"
-              style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '28px' }}
-            >
-              <span style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.72rem',
-                color: 'rgba(0,210,255,0.7)',
                 textTransform: 'uppercase',
-                letterSpacing: '0.15em',
-                fontWeight: 600,
-                flexShrink: 0,
-                minWidth: '110px',
+                letterSpacing: '0.18em',
               }}>
-                Đơn vị
+                CHÚC ĐẠI HỘI THÀNH CÔNG TỐT ĐẸP!
               </span>
-              <div style={{ width: '1px', height: '14px', background: 'rgba(0,210,255,0.3)', flexShrink: 0 }} />
               <span style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: 'clamp(0.9rem, 1.6vw, 1.15rem)',
-                fontWeight: 400,
-                color: 'rgba(255,255,255,0.65)',
-                letterSpacing: '0.03em',
+                fontFamily: 'var(--font-body)', fontSize: '0.88rem',
+                fontWeight: 700, color: 'rgba(0,210,255,0.9)', letterSpacing: '0.08em',
               }}>
-                {guest.branch_location || '—'}
+                {/* Additional content */}
               </span>
-            </motion.div>
-
-            {/* Divider */}
-            <motion.div
-              custom={5} variants={lineVariants} initial="hidden" animate="show"
-              style={{ height: '1px', background: 'rgba(255,255,255,0.07)', marginBottom: '18px' }}
-            />
-
-            {/* Bottom row: join date + RFID */}
-            <motion.div
-              custom={6} variants={lineVariants} initial="hidden" animate="show"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}
-            >
-              {/* Join date */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.9rem' }}>📅</span>
-                <div>
-                  <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-body)' }}>
-                    Tham gia
-                  </div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'rgba(255,255,255,0.75)', fontFamily: 'var(--font-body)' }}>
-                    {formatDate(guest.join_date)}
-                  </div>
-                </div>
-              </div>
-
-              {/* RFID */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <motion.div
-                  style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#00d2ff', boxShadow: '0 0 8px #00d2ff', flexShrink: 0 }}
-                  animate={{ opacity: [1, 0.3, 1] }}
-                  transition={{ duration: 1.2, repeat: Infinity }}
-                />
-                <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-body)' }}>
-                  Mã thẻ:
-                </span>
-                <span style={{ fontSize: '0.88rem', letterSpacing: '0.12em', color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-body)' }}>
-                  {guest.rfid_card_id}
-                </span>
-              </div>
             </motion.div>
           </div>
         </div>
       </motion.div>
 
-      {/* Slogan */}
-      <p
-        className="fixed bottom-7 left-0 right-0 text-center"
-        style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: 'clamp(0.65rem, 1.1vw, 0.9rem)',
-          fontWeight: 700,
-          color: 'rgba(245,200,66,0.6)',
-          letterSpacing: '0.28em',
-          textTransform: 'uppercase',
-        }}
-      >
+      {/* Bottom slogan */}
+      <p className="fixed bottom-7 left-0 right-0 text-center" style={{
+        fontFamily: 'var(--font-body)',
+        fontSize: 'clamp(0.62rem, 1vw, 0.85rem)',
+        fontWeight: 700, color: 'rgba(245,200,66,0.55)',
+        letterSpacing: '0.28em', textTransform: 'uppercase',
+      }}>
         Tiên Phong – Đoàn Kết – Sáng Tạo – Đột Phá – Phát Triển
       </p>
     </motion.div>

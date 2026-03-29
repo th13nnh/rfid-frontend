@@ -108,35 +108,32 @@ export default function LandingView() {
         {/* ================= CTA (SEPARATE BLOCK) ================= */}
         <motion.div
           variants={up}
-          className="mt-16 w-full max-w-5xl relative group"
+          className="mt-16 relative group w-fit mx-auto"
         >
           {/* Outer Thin Border Glow */}
           <div className="absolute -inset-1 bg-cyan-500/10 blur-sm rounded-sm" />
 
           <div
-            className="relative flex items-center justify-center h-20 border border-cyan-500/30 bg-slate-950/40 backdrop-blur-md"
+            className="relative inline-flex items-center gap-4 px-6 py-3 border border-cyan-500/30 bg-slate-950/40 backdrop-blur-md whitespace-nowrap"
             style={{ boxShadow: 'inset 0 0 20px rgba(0, 210, 255, 0.1)' }}
           >
-            {/* Inner "Pill" Container */}
-            <div className="flex items-center gap-4 px-12 py-2 border border-cyan-400/40 rounded-full bg-cyan-950/20">
-              {/* Card Icon - Using an Image or SVG for better match */}
-              <div className="w-8 h-5 bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-sm relative shadow-lg">
-                <div className="absolute top-1 w-full h-[3px] bg-slate-800" />
-              </div>
-
-              <span className="font-bold tracking-widest text-xl text-white uppercase italic">
-                Vui Lòng Quẹt Thẻ Để Điểm Danh
-              </span>
+            {/* Card Icon */}
+            <div className="w-8 h-5 bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-sm relative shadow-lg shrink-0">
+              <div className="absolute top-1 w-full h-[3px] bg-slate-800" />
             </div>
 
-            {/* Corner Accents (Optional for that tech look) */}
+            <span className="font-bold tracking-widest text-xl text-white uppercase italic">
+              Vui Lòng CHẠM Thẻ Để Điểm Danh
+            </span>
+
+            {/* Corner Accents */}
             <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-400" />
             <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-400" />
           </div>
 
           {/* Animated Scanning Line Effect */}
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent w-1/2"
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent w-1/2 pointer-events-none"
             animate={{ x: ['-100%', '200%'] }}
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
           />

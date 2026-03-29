@@ -17,7 +17,7 @@ const beVietnamPro = Be_Vietnam_Pro({
 });
 
 export const metadata: Metadata = {
-  title: 'Đại Hội Đại Biểu – Đoàn TNCS Hồ Chí Minh',
+  title: 'ĐẠI HỘI HỘI LHTN PHƯỜNG AN PHÚ',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
