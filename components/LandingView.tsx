@@ -115,7 +115,7 @@ export default function LandingView() {
           >
             <div className="relative w-full max-w-[650px] h-[550px]">
               <Image
-                src="/media/logoRight.png"
+                src="/media/logo1122.png"
                 alt="artwork"
                 fill
                 className="object-contain"
