@@ -338,27 +338,23 @@ export default function GuestView({ guest, tapCount }: GuestViewProps) {
               style={{ height: '1px', background: 'rgba(41,197,246,0.20)', marginBottom: '20px' }} />
 
             {/* Info rows */}
-            {guest.is_vip ? (
-              <motion.p
-                custom={3} variants={lineVariants} initial="hidden" animate="show"
-                style={{
-                  fontFamily: beVietnam.style.fontFamily,
-                  fontSize: 'clamp(1rem, 1.6vw, 1.25rem)',
-                  fontWeight: 700,
-                  color: '#0a3a6e',
-                  lineHeight: 1.55,
-                  marginBottom: '8px',
-                  marginTop: '8px',
-                }}
-              >
-                {guest.job_position || 'Đại Biểu'}
-              </motion.p>
-            ) : (
-              <>
-                <InfoRow label="Chức vụ" value={guest.job_position || 'Đại Biểu'} custom={3} />
-                <InfoRow label="Đơn vị" value={guest.branch_location || '—'} custom={4} />
-              </>
-            )}
+            <motion.p
+              custom={3}
+              variants={lineVariants}
+              initial="hidden"
+              animate="show"
+              style={{
+                fontFamily: beVietnam.style.fontFamily,
+                fontSize: 'clamp(1rem, 1.6vw, 1.25rem)',
+                fontWeight: 700,
+                color: '#0a3a6e',
+                lineHeight: 1.55,
+                marginBottom: '8px',
+                marginTop: '8px',
+              }}
+            >
+              {guest.job_position || 'Đại Biểu'}
+            </motion.p>
 
             {/* Divider */}
             <motion.div custom={6} variants={lineVariants} initial="hidden" animate="show"
