@@ -9,10 +9,7 @@ import GuestView from '@/components/GuestView';
 import { fetchGuestByRfid, logTap, Guest } from '@/lib/api';
 import { useRfidScanner } from '@/hooks/useRfidScanner';
 
-// Canvas has window refs — load client-only
-const ParticleCanvas = dynamic(() => import('@/components/ParticleCanvas'), { ssr: false });
-
-const COUNTDOWN_TOTAL = 5; // seconds before returning to landing
+const COUNTDOWN_TOTAL = 5;
 
 type AppState = 'landing' | 'guest';
 
@@ -76,7 +73,7 @@ export default function Home() {
       startCountdown();
     } catch {
       addToast(`❌ Thẻ "${cardId}" không hợp lệ hoặc chưa đăng ký.`);
-      if (appState === 'guest') startCountdown(); // reset timer if on guest page
+      if (appState === 'guest') startCountdown();
     }
   }, [appState, startCountdown]);
 
@@ -96,19 +93,19 @@ export default function Home() {
   useEffect(() => () => { if (countdownRef.current) clearInterval(countdownRef.current); }, []);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden" style={{ background: '#010512' }}>
+    <div
+      className="relative w-screen h-screen overflow-hidden"
+      style={{ background: 'linear-gradient(160deg, #c9f0ff 0%, #e8f9ff 35%, #ffffff 55%, #e0f6ff 80%, #8dd9f5 100%)' }}
+    >
 
-      {/* Particle background */}
-      <ParticleCanvas />
-
-      {/* Light beams */}
-      <Beams />
+      {/* Tech SVG background */}
+      <TechBackground />
 
       {/* Top accent bar */}
       <div
         className="fixed top-0 left-0 right-0 z-20 h-[3px]"
         style={{
-          background: 'linear-gradient(90deg, transparent 0%, #00d2ff 25%, #f5c842 50%, #00d2ff 75%, transparent 100%)',
+          background: 'linear-gradient(90deg, transparent 0%, #29c5f6 25%, #1a6fff 50%, #29c5f6 75%, transparent 100%)',
         }}
       />
 
@@ -121,7 +118,7 @@ export default function Home() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            style={{ background: 'rgba(0,210,255,0.1)' }}
+            style={{ background: 'rgba(41,197,246,0.15)' }}
           />
         )}
       </AnimatePresence>
@@ -152,10 +149,9 @@ export default function Home() {
               transition={{ duration: 0.3 }}
               className="px-6 py-3.5 rounded-xl text-sm font-semibold tracking-wide whitespace-nowrap"
               style={{
-                background: t.type === 'error' ? 'rgba(220,40,40,0.85)' : 'rgba(0,80,220,0.85)',
-                border: `1px solid ${t.type === 'error' ? 'rgba(255,100,80,0.4)' : 'rgba(0,150,255,0.4)'}`,
+                background: t.type === 'error' ? 'rgba(180,30,30,0.88)' : 'rgba(26,111,255,0.88)',
+                border: `1px solid ${t.type === 'error' ? 'rgba(255,100,80,0.4)' : 'rgba(41,197,246,0.4)'}`,
                 backdropFilter: 'blur(12px)',
-                fontFamily: 'var(--font-body)',
                 color: '#fff',
               }}
             >
@@ -168,40 +164,106 @@ export default function Home() {
   );
 }
 
-// ── decorative light beams ────────────────────────────────────
-function Beams() {
-  const beams = [
-    { left: '8%', height: '75%', dur: 8, delay: -1 },
-    { left: '20%', height: '88%', dur: 11, delay: -3, opacity: 0.55 },
-    { left: '35%', height: '68%', dur: 9, delay: -5 },
-    { left: '52%', height: '95%', dur: 13, delay: -2, gold: true },
-    { left: '67%', height: '80%', dur: 10, delay: -7 },
-    { left: '80%', height: '72%', dur: 7, delay: -4, opacity: 0.5 },
-    { left: '93%', height: '84%', dur: 12, delay: -6 },
-  ];
+// ── Light-blue tech background ────────────────────────────────
+function TechBackground() {
+  // Generate dot positions for top-left grid
+  const dotsTopLeft = [];
+  for (let row = 0; row < 7; row++) {
+    for (let col = 0; col < 9 - row; col++) {
+      dotsTopLeft.push({ cx: 28 + col * 26, cy: 28 + row * 26, key: `tl-${row}-${col}` });
+    }
+  }
+
+  // Generate dot positions for top-right grid
+  const dotsTopRight = [];
+  for (let row = 0; row < 7; row++) {
+    for (let col = 0; col < 9 - row; col++) {
+      dotsTopRight.push({ cx: 1252 - col * 26, cy: 28 + row * 26, key: `tr-${row}-${col}` });
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[1] pointer-events-none overflow-hidden">
-      {beams.map((b, i) => (
-        <div
-          key={i}
-          className="absolute bottom-[-10%] w-[1.5px]"
-          style={{
-            left: b.left,
-            height: b.height,
-            opacity: b.opacity ?? 0.7,
-            background: b.gold
-              ? 'linear-gradient(to top, transparent, rgba(245,200,66,0.12), transparent)'
-              : 'linear-gradient(to top, transparent, rgba(0,210,255,0.15), transparent)',
-            animation: `beamSway ${b.dur}s ${b.delay}s ease-in-out infinite`,
-          }}
-        />
-      ))}
-      <style>{`
-        @keyframes beamSway {
-          0%,100% { transform: rotate(-3deg) scaleX(1); }
-          50%      { transform: rotate(3deg) scaleX(1.6); }
-        }
-      `}</style>
+      <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 1280 720"
+        preserveAspectRatio="xMidYMid slice"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <radialGradient id="cornerGlowTL" cx="0%" cy="0%" r="60%">
+            <stop offset="0%" stopColor="#7dd4f0" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#7dd4f0" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="cornerGlowTR" cx="100%" cy="0%" r="60%">
+            <stop offset="0%" stopColor="#7dd4f0" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#7dd4f0" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {/* Corner ambient glows */}
+        <rect width="1280" height="720" fill="url(#cornerGlowTL)" />
+        <rect width="1280" height="720" fill="url(#cornerGlowTR)" />
+
+        {/* ── TOP-LEFT rounded rect outlines ── */}
+        <rect x="6" y="100" width="200" height="148" rx="28" fill="none" stroke="#5ec8f0" strokeWidth="1.5" opacity="0.45" />
+        <rect x="28" y="122" width="148" height="102" rx="18" fill="none" stroke="#5ec8f0" strokeWidth="1" opacity="0.35" />
+        <rect x="50" y="144" width="96" height="58" rx="10" fill="none" stroke="#5ec8f0" strokeWidth="0.8" opacity="0.25" />
+
+        {/* ── TOP-RIGHT rounded rect outlines ── */}
+        <rect x="1074" y="100" width="200" height="148" rx="28" fill="none" stroke="#5ec8f0" strokeWidth="1.5" opacity="0.45" />
+        <rect x="1104" y="122" width="148" height="102" rx="18" fill="none" stroke="#5ec8f0" strokeWidth="1" opacity="0.35" />
+        <rect x="1134" y="144" width="96" height="58" rx="10" fill="none" stroke="#5ec8f0" strokeWidth="0.8" opacity="0.25" />
+
+        {/* ── Dot grids ── */}
+        {dotsTopLeft.map(d => (
+          <circle key={d.key} cx={d.cx} cy={d.cy} r="2.2" fill="#3ab5e0" opacity="0.38" />
+        ))}
+        {dotsTopRight.map(d => (
+          <circle key={d.key} cx={d.cx} cy={d.cy} r="2.2" fill="#3ab5e0" opacity="0.38" />
+        ))}
+
+        {/* ── BOTTOM-LEFT tech corner ── */}
+        {/* Base orange wedge */}
+        <polygon points="0,560 210,720 0,720" fill="#ff6a1a" opacity="0.93" />
+        {/* Lighter orange behind */}
+        <polygon points="0,500 145,720 210,720 32,590" fill="#ff8c42" opacity="0.88" />
+        {/* Blue diagonal bar */}
+        <polygon points="0,600 105,720 55,720 0,638" fill="#1a6fff" opacity="0.93" />
+        {/* Cyan edge highlight on orange */}
+        <polygon points="0,560 210,720 204,720 0,554" fill="#29c5f6" opacity="0.78" />
+        {/* Cyan edge highlight on blue */}
+        <polygon points="0,600 105,720 100,720 0,595" fill="#29c5f6" opacity="0.6" />
+        {/* White dot */}
+        <circle cx="20" cy="668" r="7" fill="white" opacity="0.96" />
+        {/* Cyan accent squares */}
+        <rect x="48" y="650" width="22" height="22" rx="4" fill="#29c5f6" opacity="0.97" />
+        <rect x="95" y="682" width="15" height="15" rx="3" fill="#29c5f6" opacity="0.82" />
+        {/* Outlined square */}
+        <rect x="72" y="668" width="14" height="14" rx="2" fill="none" stroke="#1a6fff" strokeWidth="2.5" />
+        {/* Small blue tag */}
+        <rect x="20" y="635" width="8" height="20" rx="2" fill="#1a6fff" opacity="0.85" />
+        {/* Three dots row */}
+        <circle cx="50" cy="632" r="3.5" fill="white" opacity="0.9" />
+        <circle cx="62" cy="632" r="3.5" fill="white" opacity="0.7" />
+        <circle cx="74" cy="632" r="3.5" fill="white" opacity="0.5" />
+
+        {/* ── BOTTOM-RIGHT tech corner (mirrored) ── */}
+        <polygon points="1280,560 1070,720 1280,720" fill="#ff6a1a" opacity="0.93" />
+        <polygon points="1280,500 1135,720 1070,720 1248,590" fill="#ff8c42" opacity="0.88" />
+        <polygon points="1280,600 1175,720 1225,720 1280,638" fill="#1a6fff" opacity="0.93" />
+        <polygon points="1280,560 1070,720 1076,720 1280,554" fill="#29c5f6" opacity="0.78" />
+        <polygon points="1280,600 1175,720 1180,720 1280,595" fill="#29c5f6" opacity="0.6" />
+        <circle cx="1260" cy="668" r="7" fill="white" opacity="0.96" />
+        <rect x="1210" y="650" width="22" height="22" rx="4" fill="#29c5f6" opacity="0.97" />
+        <rect x="1170" y="682" width="15" height="15" rx="3" fill="#29c5f6" opacity="0.82" />
+        <rect x="1194" y="668" width="14" height="14" rx="2" fill="none" stroke="#1a6fff" strokeWidth="2.5" />
+        <rect x="1252" y="635" width="8" height="20" rx="2" fill="#1a6fff" opacity="0.85" />
+        <circle cx="1230" cy="632" r="3.5" fill="white" opacity="0.9" />
+        <circle cx="1218" cy="632" r="3.5" fill="white" opacity="0.7" />
+        <circle cx="1206" cy="632" r="3.5" fill="white" opacity="0.5" />
+      </svg>
     </div>
   );
 }

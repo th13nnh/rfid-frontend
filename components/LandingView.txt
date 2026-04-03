@@ -1,0 +1,159 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import Image from 'next/image';
+
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
+};
+
+const up = {
+  hidden: { opacity: 0, y: 30 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+export default function LandingView() {
+  return (
+    <motion.div
+      className="fixed inset-0 z-10 flex flex-col items-center justify-center px-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      {/* Background */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 70% 55% at 50% 50%, rgba(0,80,200,0.2), transparent)',
+        }}
+      />
+
+      <motion.div
+        variants={stagger}
+        initial="hidden"
+        animate="show"
+        className="relative z-10 w-full max-w-7xl flex flex-col items-center"
+      >
+        {/* ================= MAIN GRID ================= */}
+        <div className="w-full grid md:grid-cols-[1.2fr_1fr] gap-10 items-center">
+
+          {/* LEFT: LOGO */}
+          <motion.div
+            variants={up}
+            className="flex justify-center md:justify-end"
+          >
+            <div className="relative w-[300px] h-[300px] md:w-[480px] md:h-[480px] lg:w-[600px] lg:h-[600px]">
+              <Image
+                src="/media/logo.png"
+                alt="logo"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+          </motion.div>
+
+          {/* RIGHT: TEXT */}
+          <motion.div
+            variants={up}
+            className="text-center md:text-left"
+          >
+            <p
+              className="mb-3 tracking-[0.3em] uppercase"
+              style={{ color: '#00d2ff', fontWeight: 600 }}
+            >
+              Chào Mừng ĐẠI HỘI ĐẠI BIỂU
+            </p>
+
+            <h1
+              className="leading-tight mb-3"
+              style={{
+                fontSize: 'clamp(2.5rem, 5vw, 5rem)',
+                fontWeight: 800,
+                background: 'linear-gradient(135deg, #f5c842, #fff, #f5c842)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              HỘI LHTN VIỆT NAM PHƯỜNG AN PHÚ
+            </h1>
+
+            <p className="text-xl font-semibold mb-1">
+              LẦN THỨ I
+            </p>
+
+            <p
+              className="mb-6"
+              style={{ color: '#00d2ff', fontWeight: 600 }}
+            >
+              NHIỆM KỲ 2026 – 2031
+            </p>
+
+            <div
+              className="w-64 h-px mx-auto md:mx-0"
+              style={{
+                background:
+                  'linear-gradient(90deg, transparent, #00d2ff, #f5c842, transparent)',
+              }}
+            />
+          </motion.div>
+        </div>
+
+        {/* ================= CTA (SEPARATE BLOCK) ================= */}
+        <motion.div
+          variants={up}
+          className="mt-16 relative group w-fit mx-auto"
+        >
+          {/* Outer Thin Border Glow */}
+          <div className="absolute -inset-1 bg-cyan-500/10 blur-sm rounded-sm" />
+
+          <div
+            className="relative inline-flex items-center gap-4 px-6 py-3 border border-cyan-500/30 bg-slate-950/40 backdrop-blur-md whitespace-nowrap"
+            style={{ boxShadow: 'inset 0 0 20px rgba(0, 210, 255, 0.1)' }}
+          >
+            {/* Card Icon */}
+            <div className="w-8 h-5 bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-sm relative shadow-lg shrink-0">
+              <div className="absolute top-1 w-full h-[3px] bg-slate-800" />
+            </div>
+
+            <span className="font-bold tracking-widest text-xl text-white uppercase italic">
+              Vui Lòng CHẠM Thẻ Để Điểm Danh
+            </span>
+
+            {/* Corner Accents */}
+            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-400" />
+            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-400" />
+          </div>
+
+          {/* Animated Scanning Line Effect */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent w-1/2 pointer-events-none"
+            animate={{ x: ['-100%', '200%'] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          />
+        </motion.div>
+      </motion.div>
+
+      {/* FOOTER */}
+      <motion.p
+        className="absolute bottom-6 left-0 right-0 text-center tracking-[0.25em] uppercase"
+        style={{
+          fontSize: '0.85rem',
+          fontWeight: 700,
+          color: 'rgba(245,200,66,0.7)',
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2 }}
+      >
+        TIÊN PHONG - YÊU NƯỚC - BẢN LĨNH - SÁNG TẠO
+      </motion.p>
+    </motion.div>
+  );
+}
