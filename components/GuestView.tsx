@@ -30,7 +30,7 @@ const cardVariants = {
   hidden: { opacity: 0, y: 40, scale: 0.96 },
   show: {
     opacity: 1, y: 0, scale: 1,
-    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const },
   },
   exit: {
     opacity: 0, y: -20, scale: 0.97,
@@ -42,7 +42,7 @@ const lineVariants = {
   hidden: { opacity: 0, x: -16 },
   show: (i: number) => ({
     opacity: 1, x: 0,
-    transition: { delay: i * 0.07 + 0.15, duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+    transition: { delay: i * 0.07 + 0.15, duration: 0.45, ease: [0.22, 1, 0.36, 1] as const },
   }),
 };
 
@@ -364,7 +364,7 @@ export default function GuestView({ guest, tapCount }: GuestViewProps) {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.6, ease: [0.22, 1, 0.36, 1] as any }}
+              transition={{ delay: 0.6, duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
               style={{ position: 'relative', marginTop: '20px' }}
             >
               {/* Animated cyan accent bar */}
