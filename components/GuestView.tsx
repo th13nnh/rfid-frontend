@@ -1,6 +1,25 @@
 'use client';
 // ── components/GuestView.tsx ──────────────────────────────────
 
+import { Cormorant_Garamond, Playfair_Display, Be_Vietnam_Pro } from 'next/font/google';
+
+const beVietnam = Be_Vietnam_Pro({
+  subsets: ['latin', 'vietnamese'],
+  weight: ['400', '600', '800'],
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin', 'vietnamese'],
+  weight: ['600', '700'],
+  style: ['italic', 'normal'],
+});
+
+const luxuryFont = Cormorant_Garamond({
+  subsets: ['latin', 'vietnamese'],
+  weight: ['500', '600', '700'],
+  style: ['italic', 'normal'],
+});
+
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Guest } from '@/lib/api';
@@ -64,7 +83,6 @@ function LightBeam({ direction = 'right' }: { direction?: 'left' | 'right' }) {
   );
 }
 
-/* ─── FitText: scales h2 so it always fits in one line ─── */
 function FitName({ name }: { name: string }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLHeadingElement>(null);
@@ -73,7 +91,7 @@ function FitName({ name }: { name: string }) {
     const wrap = wrapRef.current;
     const text = textRef.current;
     if (!wrap || !text) return;
-    // Reset scale first
+
     text.style.transform = 'scaleX(1)';
     const ratio = wrap.clientWidth / text.scrollWidth;
     if (ratio < 1) text.style.transform = `scaleX(${ratio})`;
@@ -83,15 +101,18 @@ function FitName({ name }: { name: string }) {
     <div ref={wrapRef} style={{ overflow: 'hidden', width: '100%' }}>
       <h2
         ref={textRef}
+        className={beVietnam.className} // Apply font class directly here
         style={{
-          fontFamily: 'var(--font-display)',
+          fontWeight: 800, // <--- Add this for Bold
           fontSize: 'clamp(1.4rem, 3.8vw, 2.8rem)',
-          lineHeight: 1, margin: 0,
+          lineHeight: 1.35,
+          margin: 0,
+          padding: '6px 0',
           background: 'linear-gradient(130deg, #ffffff 30%, #fde68a 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
-          letterSpacing: '0.04em',
+          letterSpacing: '0.02em', // Reduced slightly to help fit
           textTransform: 'uppercase',
           whiteSpace: 'nowrap',
           transformOrigin: 'left center',
@@ -103,7 +124,6 @@ function FitName({ name }: { name: string }) {
     </div>
   );
 }
-
 /* ─── Info row: label dim, value white, same size ─── */
 function InfoRow({ label, value, custom }: { label: string; value: string; custom: number }) {
   return (
@@ -187,14 +207,9 @@ export default function GuestView({ guest, tapCount }: GuestViewProps) {
           {/* ══ LEFT — PHOTO CARD ══ */}
           <div className="flex-shrink-0 flex flex-col items-center" style={{ gap: '14px' }}>
 
-            {/*
-              ─ The "side white light" effect from the reference:
-                A dark card with two vertical soft white glows bleeding
-                from the left and right inner edges of the photo.
-            ─ */}
             <div style={{ position: 'relative', display: 'inline-block' }}>
 
-              {/* Outer card shell — subtle border + deep drop shadow */}
+              {/* Outer card shell — glow ring, circle for VIP */}
               <motion.div
                 animate={{
                   boxShadow: [
@@ -206,26 +221,26 @@ export default function GuestView({ guest, tapCount }: GuestViewProps) {
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                 style={{
                   position: 'absolute', inset: '-2px',
-                  borderRadius: '16px',
+                  borderRadius: guest.is_vip ? '50%' : '16px',
                   border: '1px solid rgba(255,255,255,0.14)',
                   background: 'transparent',
                   zIndex: 0,
                 }}
               />
 
-              {/* Photo container */}
+              {/* Photo container — circle for VIP */}
               <div style={{
                 position: 'relative',
                 width: `${PHOTO_W}px`,
                 height: `${PHOTO_H}px`,
-                borderRadius: '14px',
+                borderRadius: guest.is_vip ? '50%' : '14px',
                 overflow: 'hidden',
                 backgroundColor: '#060e28',
                 zIndex: 1,
               }}>
                 {!guest.photo_url ? (
                   <Image
-                    src="/pfp/test.jpg"
+                    src="/pfp/testcircle.png"
                     alt={fullName}
                     fill
                     className="object-cover object-center"
@@ -269,19 +284,23 @@ export default function GuestView({ guest, tapCount }: GuestViewProps) {
                   }}
                 />
 
-                {/* Bottom name fade overlay */}
-                <div style={{
-                  position: 'absolute', bottom: 0, left: 0, right: 0, height: '90px',
-                  background: 'linear-gradient(to top, rgba(3,10,32,0.96) 0%, rgba(3,10,32,0.4) 60%, transparent 100%)',
-                }} />
+                {/* Bottom name fade overlay — only for non-VIP (rect card) */}
+                {!guest.is_vip && (
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0, height: '90px',
+                    background: 'linear-gradient(to top, rgba(3,10,32,0.96) 0%, rgba(3,10,32,0.4) 60%, transparent 100%)',
+                  }} />
+                )}
               </div>
 
-              {/* Thin bottom border accent */}
-              <div style={{
-                position: 'absolute', bottom: '-1px', left: '10%', right: '10%', height: '2px',
-                background: 'linear-gradient(90deg, transparent, rgba(0,180,255,0.7), transparent)',
-                zIndex: 2,
-              }} />
+              {/* Thin bottom border accent — only for non-VIP */}
+              {!guest.is_vip && (
+                <div style={{
+                  position: 'absolute', bottom: '-1px', left: '10%', right: '10%', height: '2px',
+                  background: 'linear-gradient(90deg, transparent, rgba(0,180,255,0.7), transparent)',
+                  zIndex: 2,
+                }} />
+              )}
             </div>
 
             {/* VIP badge */}
@@ -318,7 +337,7 @@ export default function GuestView({ guest, tapCount }: GuestViewProps) {
                 marginBottom: '20px',
               }}
             >
-              ✦ Xin Chào, Đại Biểu
+              {guest.is_vip ? '✦ Xin chào, Đồng chí' : '✦ Xin Chào, Đại Biểu'}
             </motion.p>
 
             {/* Name — rectangle frame, full width, single line auto-shrink */}
@@ -359,45 +378,63 @@ export default function GuestView({ guest, tapCount }: GuestViewProps) {
             <motion.div custom={2} variants={lineVariants} initial="hidden" animate="show"
               style={{ height: '1px', background: 'rgba(255,255,255,0.06)', marginBottom: '20px' }} />
 
-            {/* Info rows */}
-            <InfoRow label="Chức vụ" value={guest.job_position || 'Đại Biểu'} custom={3} />
-            <InfoRow label="Đơn vị" value={guest.branch_location || '—'} custom={4} />
-
+            {/* Info rows — VIP shows only Chức vụ value (2-line), non-VIP shows label+value rows */}
+            {guest.is_vip ? (
+              <motion.p
+                custom={3} variants={lineVariants} initial="hidden" animate="show"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 'clamp(1rem, 1.6vw, 1.25rem)',
+                  fontWeight: 700,
+                  color: '#ffffff',
+                  lineHeight: 1.55,
+                  marginBottom: '8px',
+                  marginTop: '8px'
+                }}
+              >
+                {guest.job_position || 'Đại Biểu'}
+              </motion.p>
+            ) : (
+              <>
+                <InfoRow label="Chức vụ" value={guest.job_position || 'Đại Biểu'} custom={3} />
+                <InfoRow label="Đơn vị" value={guest.branch_location || '—'} custom={4} />
+              </>
+            )}
 
             {/* Divider */}
             <motion.div custom={6} variants={lineVariants} initial="hidden" animate="show"
               style={{ height: '1px', background: 'rgba(255,255,255,0.06)', marginTop: '6px', marginBottom: '16px' }} />
 
-            {/* Tap count */}
-            <motion.div custom={7} variants={lineVariants} initial="hidden" animate="show"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                marginTop: '15px' // Adds spacing above the entire row
-              }}>
+            {/* Bottom message */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              style={{ position: 'relative', marginTop: '20px' }}
+            >
               <motion.div
+                animate={{ scaleY: [0.6, 1, 0.6], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
                 style={{
-                  width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0,
-                  background: 'rgba(0,200,255,0.9)', boxShadow: '0 0 7px rgba(0,200,255,0.8)',
+                  position: 'absolute', left: 0, top: '4px', bottom: '4px',
+                  width: '3px', borderRadius: '2px',
+                  background: 'linear-gradient(to bottom, #f5c842, rgba(245,200,66,0.3))',
                 }}
-                animate={{ opacity: [1, 0.25, 1] }}
-                transition={{ duration: 1.4, repeat: Infinity }}
               />
-              <span style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.85rem',
-                color: '#ffffff',
-                textTransform: 'uppercase',
-                letterSpacing: '0.18em',
+              <span className={luxuryFont.className} style={{
+                display: 'block',
+                paddingLeft: '14px',
+                fontSize: 'clamp(1.15rem, 1.55vw, 1.4rem)',
+                fontWeight: 600,
+                fontStyle: 'italic',
+                color: '#fde68a',
+                lineHeight: 1.45,
+                letterSpacing: '0.01em',
+                textShadow: '0 2px 12px rgba(245,200,66,0.25)',
               }}>
-                CHÚC ĐẠI HỘI THÀNH CÔNG TỐT ĐẸP!
-              </span>
-              <span style={{
-                fontFamily: 'var(--font-body)', fontSize: '0.88rem',
-                fontWeight: 700, color: 'rgba(0,210,255,0.9)', letterSpacing: '0.08em',
-              }}>
-                {/* Additional content */}
+                {guest.is_vip
+                  ? 'Chào mừng Đại biểu tham gia Đại hội Hội LHTN Việt Nam phường An Phú, lần thứ I nhiệm kỳ 2026 – 2031'
+                  : <>Trân trọng chào mừng Đại biểu tham dự Đại hội<br />Chúc Đại hội diễn ra thành công tốt đẹp!</>}
               </span>
             </motion.div>
           </div>
