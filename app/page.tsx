@@ -3,13 +3,13 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import dynamic from 'next/dynamic';
 import LandingView from '@/components/LandingView';
 import GuestView from '@/components/GuestView';
 import { fetchGuestByRfid, logTap, Guest } from '@/lib/api';
 import { useRfidScanner } from '@/hooks/useRfidScanner';
 
 const COUNTDOWN_TOTAL = 5;
+const EXPORT_API = 'https://rfid-backend-production.up.railway.app/api/checkins';
 
 type AppState = 'landing' | 'guest';
 
@@ -27,11 +27,11 @@ export default function Home() {
   const toastId = useRef(0);
 
   // ── helpers ──────────────────────────────────────────────────
-  const addToast = (text: string, type: ToastMsg['type'] = 'error') => {
+  const addToast = useCallback((text: string, type: ToastMsg['type'] = 'error') => {
     const id = ++toastId.current;
     setToasts(p => [...p, { id, text, type }]);
     setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 3500);
-  };
+  }, []);
 
   const doFlash = () => {
     setFlash(true);
@@ -59,6 +59,44 @@ export default function Home() {
     setAppState('landing');
   }, []);
 
+  // ── Excel export ─────────────────────────────────────────────
+  const exportCheckins = useCallback(async () => {
+    try {
+      const res = await fetch(EXPORT_API);
+      const json = await res.json();
+      if (!json.success) throw new Error('API error');
+
+      const XLSX = await import('xlsx');
+
+      const rows = json.data.map((c: any) => {
+        const g = c.guest;
+        return {
+          'Họ và Tên': `${(g.first_name || '').trim()} ${(g.last_name || '').trim()}`.trim(),
+          'Chức vụ': g.job_position || '',
+          'Lãnh đạo': g.is_vip ? 'Đúng' : 'Không',
+          'RFID Card ID': g.rfid_card_id,
+          'Thời gian điểm danh': new Date(c.first_tap_timestamp).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+          'Số lần quẹt thẻ': c.tap_timestamps.length,
+        };
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = [
+        { wch: 30 }, { wch: 50 }, { wch: 8 },
+        { wch: 14 }, { wch: 22 }, { wch: 12 },
+      ];
+      XLSX.utils.book_append_sheet(wb, ws, 'Điểm Danh');
+
+      const date = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `checkin_${date}.xlsx`);
+
+      addToast(`✓ Xuất ${rows.length} người thành công`, 'info');
+    } catch {
+      addToast('❌ Xuất Excel thất bại');
+    }
+  }, [addToast]);
+
   // ── RFID scan handler ─────────────────────────────────────────
   const handleScan = useCallback(async (cardId: string) => {
     doFlash();
@@ -75,7 +113,7 @@ export default function Home() {
       addToast(`❌ Thẻ "${cardId}" không hợp lệ hoặc chưa đăng ký.`);
       if (appState === 'guest') startCountdown();
     }
-  }, [appState, startCountdown]);
+  }, [appState, startCountdown, addToast]);
 
   useRfidScanner({ onScan: handleScan });
 
@@ -83,12 +121,40 @@ export default function Home() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.key === 'd' || e.key === 'D') && !e.ctrlKey && !e.metaKey) {
-        handleScan('3209942002');
+        handleScan('2671215025');
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [handleScan]);
+
+  // Hidden gesture: press P three times within 2s to export Excel
+  useEffect(() => {
+    let pCount = 0;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== 'p' || e.ctrlKey || e.metaKey || e.repeat) return;
+
+      pCount++;
+
+      if (timer) clearTimeout(timer);
+
+      if (pCount >= 3) {
+        pCount = 0;
+        exportCheckins();
+        return;
+      }
+
+      timer = setTimeout(() => { pCount = 0; }, 2000);
+    };
+
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      if (timer) clearTimeout(timer);
+    };
+  }, [exportCheckins]);
 
   useEffect(() => () => { if (countdownRef.current) clearInterval(countdownRef.current); }, []);
 
@@ -166,7 +232,6 @@ export default function Home() {
 
 // ── Light-blue tech background ────────────────────────────────
 function TechBackground() {
-  // Generate dot positions for top-left grid
   const dotsTopLeft = [];
   for (let row = 0; row < 7; row++) {
     for (let col = 0; col < 9 - row; col++) {
@@ -174,7 +239,6 @@ function TechBackground() {
     }
   }
 
-  // Generate dot positions for top-right grid
   const dotsTopRight = [];
   for (let row = 0; row < 7; row++) {
     for (let col = 0; col < 9 - row; col++) {
@@ -202,21 +266,17 @@ function TechBackground() {
           </radialGradient>
         </defs>
 
-        {/* Corner ambient glows */}
         <rect width="1280" height="720" fill="url(#cornerGlowTL)" />
         <rect width="1280" height="720" fill="url(#cornerGlowTR)" />
 
-        {/* ── TOP-LEFT rounded rect outlines ── */}
         <rect x="6" y="100" width="200" height="148" rx="28" fill="none" stroke="#5ec8f0" strokeWidth="1.5" opacity="0.45" />
         <rect x="28" y="122" width="148" height="102" rx="18" fill="none" stroke="#5ec8f0" strokeWidth="1" opacity="0.35" />
         <rect x="50" y="144" width="96" height="58" rx="10" fill="none" stroke="#5ec8f0" strokeWidth="0.8" opacity="0.25" />
 
-        {/* ── TOP-RIGHT rounded rect outlines ── */}
         <rect x="1074" y="100" width="200" height="148" rx="28" fill="none" stroke="#5ec8f0" strokeWidth="1.5" opacity="0.45" />
         <rect x="1104" y="122" width="148" height="102" rx="18" fill="none" stroke="#5ec8f0" strokeWidth="1" opacity="0.35" />
         <rect x="1134" y="144" width="96" height="58" rx="10" fill="none" stroke="#5ec8f0" strokeWidth="0.8" opacity="0.25" />
 
-        {/* ── Dot grids ── */}
         {dotsTopLeft.map(d => (
           <circle key={d.key} cx={d.cx} cy={d.cy} r="2.2" fill="#3ab5e0" opacity="0.38" />
         ))}
@@ -224,32 +284,20 @@ function TechBackground() {
           <circle key={d.key} cx={d.cx} cy={d.cy} r="2.2" fill="#3ab5e0" opacity="0.38" />
         ))}
 
-        {/* ── BOTTOM-LEFT tech corner ── */}
-        {/* Base orange wedge */}
         <polygon points="0,560 210,720 0,720" fill="#ff6a1a" opacity="0.93" />
-        {/* Lighter orange behind */}
         <polygon points="0,500 145,720 210,720 32,590" fill="#ff8c42" opacity="0.88" />
-        {/* Blue diagonal bar */}
         <polygon points="0,600 105,720 55,720 0,638" fill="#1a6fff" opacity="0.93" />
-        {/* Cyan edge highlight on orange */}
         <polygon points="0,560 210,720 204,720 0,554" fill="#29c5f6" opacity="0.78" />
-        {/* Cyan edge highlight on blue */}
         <polygon points="0,600 105,720 100,720 0,595" fill="#29c5f6" opacity="0.6" />
-        {/* White dot */}
         <circle cx="20" cy="668" r="7" fill="white" opacity="0.96" />
-        {/* Cyan accent squares */}
         <rect x="48" y="650" width="22" height="22" rx="4" fill="#29c5f6" opacity="0.97" />
         <rect x="95" y="682" width="15" height="15" rx="3" fill="#29c5f6" opacity="0.82" />
-        {/* Outlined square */}
         <rect x="72" y="668" width="14" height="14" rx="2" fill="none" stroke="#1a6fff" strokeWidth="2.5" />
-        {/* Small blue tag */}
         <rect x="20" y="635" width="8" height="20" rx="2" fill="#1a6fff" opacity="0.85" />
-        {/* Three dots row */}
         <circle cx="50" cy="632" r="3.5" fill="white" opacity="0.9" />
         <circle cx="62" cy="632" r="3.5" fill="white" opacity="0.7" />
         <circle cx="74" cy="632" r="3.5" fill="white" opacity="0.5" />
 
-        {/* ── BOTTOM-RIGHT tech corner (mirrored) ── */}
         <polygon points="1280,560 1070,720 1280,720" fill="#ff6a1a" opacity="0.93" />
         <polygon points="1280,500 1135,720 1070,720 1248,590" fill="#ff8c42" opacity="0.88" />
         <polygon points="1280,600 1175,720 1225,720 1280,638" fill="#1a6fff" opacity="0.93" />
