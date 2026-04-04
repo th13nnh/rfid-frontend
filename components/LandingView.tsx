@@ -95,32 +95,20 @@ export default function LandingView() {
           {/* LEFT LOGO */}
           <motion.div
             variants={up}
-            className="flex justify-center md:justify-end items-end h-full"
+            className="flex justify-center md:justify-end items-center h-full"
           >
-            <div className="relative w-full max-w-[650px] h-[580px]">
-              <Image
-                src="/media/logo.png"
-                alt="logo"
-                fill
-                className="object-contain"
-                priority
-              />
+            <div className="relative w-full max-w-[650px] h-[450px]">
+              <Image src="/media/logo.png" alt="logo" fill className="object-contain" priority />
             </div>
           </motion.div>
 
-          {/* RIGHT ARTWORK (MOVED UP) */}
+          {/* RIGHT ARTWORK */}
           <motion.div
             variants={up}
-            className="flex justify-center md:justify-start items-end h-full -mt-12 md:-mt-20"
+            className="flex justify-center md:justify-start items-center h-full mt-8"
           >
             <div className="relative w-full max-w-[650px] h-[550px]">
-              <Image
-                src="/media/logo1122.png"
-                alt="artwork"
-                fill
-                className="object-contain"
-                priority
-              />
+              <Image src="/media/logo1122.png" alt="artwork" fill className="object-contain" priority />
             </div>
           </motion.div>
 
