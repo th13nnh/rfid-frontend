@@ -83,7 +83,7 @@ export default function Home() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.key === 'd' || e.key === 'D') && !e.ctrlKey && !e.metaKey) {
-        handleScan('CARD-001');
+        handleScan('3209942002');
       }
     };
     window.addEventListener('keydown', onKey);

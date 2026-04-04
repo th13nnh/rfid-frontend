@@ -63,7 +63,7 @@ function FitName({ name }: { name: string }) {
     <div ref={wrapRef} style={{ overflow: 'hidden', width: '100%' }}>
       <h2
         ref={textRef}
-        className={beVietnam.className}
+        className={luxuryFont.className}
         style={{
           fontWeight: 800,
           fontSize: 'clamp(1.4rem, 3.8vw, 2.8rem)',
